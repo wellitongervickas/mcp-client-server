@@ -1,27 +1,28 @@
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod';
-import { streamText,  tool } from 'ai';
+import { InvalidToolArgumentsError, NoSuchToolError, streamText,  tool, ToolExecutionError } from 'ai';
 
-// import { client } from "@/mcp/client"
+import { client } from "@/mcp/client"
 
 // Allow streaming responses up to 30 seconds
 export const maxDuration = 30
 
 export async function POST(req: Request) {
   const { messages } = await req.json()
-  // const tools = await client.tools()
+  const tools = await client.tools()
   console.log('messages', messages)
 
   const result = streamText({
     model: openai('gpt-4o'),
     messages,
-    maxSteps: 10,
+    maxSteps: 2,
     onError: console.error,
-    onFinish: async () => {
-      // await client.close();
-    },
+    // onFinish: async () => {
+    //   await client.close();
+    // },
+    // toolChoice: 'required',
     tools: {
-      // ...tools,
+      ...tools,
       weather: tool({
         description: 'Get the weather in a location',
         parameters: z.object({
@@ -35,5 +36,17 @@ export async function POST(req: Request) {
   },
   })
 
-  return result.toDataStreamResponse()
+  return result.toDataStreamResponse({
+     getErrorMessage: error => {
+      if (NoSuchToolError.isInstance(error)) {
+        return 'The model tried to call a unknown tool.';
+      } else if (InvalidToolArgumentsError.isInstance(error)) {
+        return 'The model called a tool with invalid arguments.';
+      } else if (ToolExecutionError.isInstance(error)) {
+        return 'An error occurred during tool execution.';
+      } else {
+        return 'An unknown error occurred.';
+      }
+    },
+  })
 }

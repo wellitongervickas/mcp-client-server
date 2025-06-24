@@ -11,6 +11,7 @@ export default function Home() {
          <div className="flex flex-col w-full max-w-md py-24 mx-auto stretch">
           {messages.map(message => (
             <div key={message.id} className="whitespace-pre-wrap">
+              {JSON.stringify(message, null, 2)}
               {message.role === 'user' ? 'User: ' : 'AI: '}
               {message.parts.map((part, i) => {
                 switch (part.type) {
