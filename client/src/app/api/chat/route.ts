@@ -10,7 +10,10 @@ export const maxDuration = 30
 export async function POST(req: Request) {
   const { messages } = await req.json()
   const tools = await client.tools()
+  
+  
   console.log('messages', messages)
+  console.log('tools', Object.keys(tools))
 
   const result = streamText({
     model: openai('gpt-4o'),

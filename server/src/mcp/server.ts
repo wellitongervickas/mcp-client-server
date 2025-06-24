@@ -15,8 +15,28 @@ server.registerTool("add",
     description: "Add two numbers",
     inputSchema: { a: z.number(), b: z.number() }
   },
-  async ({ a, b }) => ({
-    content: [{ type: "text", text: String(a + b) }]
+  async ({ a, b }) => {
+    console.log('sum:', a + b)
+    return {
+      content: [{ type: "text", text: String(a + b) }]
+    }
+  }
+);
+
+// Static resource
+server.registerResource(
+  "config",
+  "config://app",
+  {
+    title: "Application Config",
+    description: "Application configuration data",
+    mimeType: "text/plain"
+  },
+  async (uri: URL) => ({
+    contents: [{
+      uri: uri.href,
+      text: "App configuration here"
+    }]
   })
 );
 
@@ -29,6 +49,7 @@ server.registerResource(
     description: "Dynamic greeting generator"
   },
   async (uri: URL) => {
+    console.log('greeting', uri)
     const name = uri.pathname.replace(/^\//, "");
     return {
       contents: [{
@@ -40,7 +61,7 @@ server.registerResource(
 );
 
 export const getTransport = (): StreamableHTTPServerTransport => {
-  return  new StreamableHTTPServerTransport({
+  return new StreamableHTTPServerTransport({
     sessionIdGenerator: undefined,
   });
 }
